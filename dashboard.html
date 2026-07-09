@@ -20,6 +20,14 @@
 
   <div class="card">
     <h2 style="margin-top:0">Add a product</h2>
+    <div style="background:rgba(14,124,102,.06);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:16px">
+      <label style="margin-top:0">Auto-fill from a link</label>
+      <div class="row">
+        <input id="importURL" placeholder="Paste an Amazon, AliExpress or Alibaba URL">
+        <button type="button" id="importBtn" style="margin-top:0;flex:0 0 auto;width:auto;padding:12px 18px">Import</button>
+      </div>
+      <div id="importMsg" class="muted" style="margin-top:8px;font-size:.85rem"></div>
+    </div>
     <form id="pf">
       <label>Product title *</label>
       <input name="title" required placeholder="e.g. Bamboo Drawer Organizer">
@@ -101,6 +109,30 @@ document.getElementById("pf").addEventListener("submit", async (e)=>{
     msg(document.getElementById("pm"),"Product published ✓",true);
     form.reset(); loadProducts();
   } catch(err){ msg(document.getElementById("pm"),(err.data&&err.data.error)||"Could not publish.",false); }
+});
+
+// Auto-fill from an Amazon / AliExpress / Alibaba link.
+document.getElementById("importBtn").addEventListener("click", async ()=>{
+  const url=document.getElementById("importURL").value.trim();
+  const msg=document.getElementById("importMsg");
+  if(!url){ msg.textContent="Paste a product URL first."; return; }
+  msg.textContent="Looking up…";
+  try{
+    const r=await api("/products/source/lookup?url="+encodeURIComponent(url));
+    const f=document.getElementById("pf"); const set=(n,v)=>{ if(v!=null&&f[n]!=null) f[n].value=v; };
+    const filled=[];
+    if(r.title&&!f.title.value){ set("title",r.title); filled.push("title"); }
+    if(r.priceUSD!=null){ set("amazonPriceUSD",r.priceUSD.toFixed(2)); filled.push("Amazon price"); }
+    if(r.unitCostUSD!=null){ set("unitCostUSD",r.unitCostUSD.toFixed(2)); filled.push("unit cost"); }
+    if(r.weightKg!=null){ set("weightKg",r.weightKg.toFixed(2)); filled.push("weight"); }
+    if(r.moq!=null){ set("moq",r.moq); filled.push("MOQ"); }
+    if(r.lengthCm){ set("lengthCm",r.lengthCm); } if(r.widthCm){ set("widthCm",r.widthCm); } if(r.heightCm){ set("heightCm",r.heightCm); }
+    msg.textContent=filled.length?((r.platform||"Link")+": filled "+filled.join(", ")):"Recognized, but no data returned.";
+  }catch(e){
+    if(e.status===503) msg.textContent="That marketplace isn't connected yet (needs an API key on the server).";
+    else if(e.status===422) msg.textContent="Couldn't read that link — paste an Amazon, AliExpress or Alibaba product URL.";
+    else msg.textContent="Lookup failed. Try again.";
+  }
 });
 
 loadMe(); loadProducts(); loadInquiries();
