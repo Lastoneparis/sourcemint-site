@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SourceMint — Register your factory</title>
+<link rel="stylesheet" href="portal.css">
+</head>
+<body>
+<nav class="nav">
+  <a class="logo" href="index.html">◧</a>
+  <a href="index.html">SourceMint</a>
+  <span class="sp"></span>
+  <a href="login.html">Supplier login</a>
+</nav>
+<div class="wrap">
+  <h1>List your factory on SourceMint</h1>
+  <p class="sub">Reach importers and Amazon sellers worldwide. Create your supplier profile, add
+  products with photos and prices, and receive buyer inquiries. Free to join.</p>
+  <div class="card">
+    <form id="f">
+      <label>Company name *</label>
+      <input name="name" required placeholder="e.g. Ningbo Sunrise Homeware Co.">
+      <div class="row">
+        <div><label>Contact email *</label><input name="email" type="email" required placeholder="sales@yourcompany.com"></div>
+        <div><label>Password *</label><input name="password" type="password" required minlength="8" placeholder="min 8 characters"></div>
+      </div>
+      <div class="row">
+        <div><label>Phone</label><input name="phone" placeholder="+86 ..."></div>
+        <div><label>Website</label><input name="website" placeholder="yourcompany.com"></div>
+      </div>
+      <div class="row">
+        <div><label>Country</label><input name="country" placeholder="China"></div>
+        <div><label>Country code</label><input name="countryCode" maxlength="2" placeholder="CN"></div>
+      </div>
+      <div class="row">
+        <div><label>Min. order qty</label><input name="minOrderQuantity" type="number" value="100"></div>
+        <div><label>Lead time (days)</label><input name="leadTimeDays" type="number" value="30"></div>
+      </div>
+      <label>About your company</label>
+      <textarea name="about" placeholder="OEM/ODM capability, main product lines, certifications, export experience…"></textarea>
+      <button type="submit">Create supplier account</button>
+      <div id="m" class="msg"></div>
+    </form>
+    <p class="muted" style="margin-top:14px">Already registered? <a class="link" href="login.html">Sign in</a></p>
+  </div>
+  <p class="muted">By registering you agree to our <a class="link" href="terms.html">Terms</a> and
+  <a class="link" href="privacy.html">Privacy Policy</a>. You are responsible for the accuracy of
+  your product data and pricing.</p>
+</div>
+<script src="app.js"></script>
+<script>
+document.getElementById("f").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const fd = Object.fromEntries(new FormData(e.target).entries());
+  ["minOrderQuantity","leadTimeDays"].forEach(k => fd[k] = parseInt(fd[k]||"0"));
+  try {
+    const r = await api("/companies/register", { method:"POST", body: fd });
+    setToken(r.token);
+    location.href = "dashboard.html";
+  } catch (err) {
+    msg(document.getElementById("m"),
+      err.status===409 ? "That email is already registered — try signing in." :
+      (err.data && err.data.error) || "Something went wrong. Please try again.", false);
+  }
+});
+</script>
+</body>
+</html>
