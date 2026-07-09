@@ -42,6 +42,12 @@
         <div><label>Amazon retail (USD)</label><input name="amazonPriceUSD" type="number" step="0.01" placeholder="24.99"></div>
         <div><label>Weight (kg)</label><input name="weightKg" type="number" step="0.01" placeholder="0.55"></div>
       </div>
+      <label>Package dimensions (cm) — improves margin accuracy</label>
+      <div class="row">
+        <div><input name="lengthCm" type="number" step="0.1" placeholder="Length"></div>
+        <div><input name="widthCm" type="number" step="0.1" placeholder="Width"></div>
+        <div><input name="heightCm" type="number" step="0.1" placeholder="Height"></div>
+      </div>
       <label>Product photo (optional)</label>
       <input name="image" type="file" accept="image/*">
       <button type="submit">Publish product</button>
@@ -84,7 +90,7 @@ document.getElementById("pf").addEventListener("submit", async (e)=>{
   const form=e.target, fd=Object.fromEntries(new FormData(form).entries());
   const file=form.image.files[0];
   ["moq"].forEach(k=>fd[k]=parseInt(fd[k]||"0"));
-  ["unitCostUSD","shippingPerUnitUSD","amazonPriceUSD","weightKg"].forEach(k=>fd[k]=parseFloat(fd[k]||"0"));
+  ["unitCostUSD","shippingPerUnitUSD","amazonPriceUSD","weightKg","lengthCm","widthCm","heightCm"].forEach(k=>fd[k]=parseFloat(fd[k]||"0"));
   delete fd.image;
   try {
     const p = await api("/products",{method:"POST",auth:true,body:fd});
