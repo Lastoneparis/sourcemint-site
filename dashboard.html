@@ -28,6 +28,16 @@
       </div>
       <div id="importMsg" class="muted" style="margin-top:8px;font-size:.85rem"></div>
     </div>
+    <div style="background:rgba(31,184,116,.07);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:16px">
+      <label style="margin-top:0">Bulk import (CSV)</label>
+      <p class="muted" style="margin:4px 0 10px;font-size:.85rem">Have many products? Upload a CSV to list them all at once.
+        <a class="link" href="catalog_template.csv" download>Download template</a></p>
+      <div class="row">
+        <input id="csvFile" type="file" accept=".csv">
+        <button type="button" id="csvBtn" style="margin-top:0;flex:0 0 auto;width:auto;padding:12px 18px">Upload</button>
+      </div>
+      <div id="csvMsg" class="muted" style="margin-top:8px;font-size:.85rem"></div>
+    </div>
     <form id="pf">
       <label>Product title *</label>
       <input name="title" required placeholder="e.g. Bamboo Drawer Organizer">
@@ -133,6 +143,45 @@ document.getElementById("importBtn").addEventListener("click", async ()=>{
     else if(e.status===422) msg.textContent="Couldn't read that link — paste an Amazon, AliExpress or Alibaba product URL.";
     else msg.textContent="Lookup failed. Try again.";
   }
+});
+
+// Bulk CSV import — parse client-side, POST as JSON to /products/bulk.
+function parseCSV(text){
+  const lines=text.replace(/\r/g,"").split("\n").filter(l=>l.trim());
+  if(!lines.length) return [];
+  const head=lines[0].split(",").map(h=>h.trim());
+  return lines.slice(1).map(line=>{
+    // basic CSV: handles simple quoted fields
+    const cells=[]; let cur="",q=false;
+    for(const ch of line){ if(ch=='"'){q=!q;} else if(ch==','&&!q){cells.push(cur);cur="";} else cur+=ch; }
+    cells.push(cur);
+    const o={}; head.forEach((h,i)=>o[h]=(cells[i]||"").trim()); return o;
+  });
+}
+const F=parseFloat, I=(v)=>parseInt(v)||0;
+document.getElementById("csvBtn").addEventListener("click", ()=>{
+  const file=document.getElementById("csvFile").files[0];
+  const msg=document.getElementById("csvMsg");
+  if(!file){ msg.textContent="Choose a CSV file first."; return; }
+  const rd=new FileReader();
+  rd.onload=async()=>{
+    const rows=parseCSV(rd.result);
+    const products=rows.filter(r=>r.title).map(r=>({
+      title:r.title, description:r.description||"", category:(r.category||"home").toLowerCase(),
+      unitCostUSD:F(r.unit_cost_usd)||0, shippingPerUnitUSD:F(r.shipping_per_unit_usd)||0,
+      moq:I(r.moq)||1, amazonPriceUSD:F(r.amazon_price_usd)||0, amazonMonthlySales:I(r.amazon_monthly_sales),
+      weightKg:F(r.weight_kg)||0.5, lengthCm:F(r.length_cm)||0, widthCm:F(r.width_cm)||0,
+      heightCm:F(r.height_cm)||0, asin:(r.asin||"").toUpperCase()
+    }));
+    if(!products.length){ msg.textContent="No product rows found (need a 'title' column)."; return; }
+    msg.textContent=`Uploading ${products.length} products…`;
+    try{
+      const res=await api("/products/bulk",{method:"POST",auth:true,body:{products}});
+      msg.textContent=`Imported ${res.created} products${res.failed?`, ${res.failed} skipped`:""}.`;
+      loadProducts();
+    }catch(e){ msg.textContent="Upload failed. Check the file format."; }
+  };
+  rd.readAsText(file);
 });
 
 loadMe(); loadProducts(); loadInquiries();

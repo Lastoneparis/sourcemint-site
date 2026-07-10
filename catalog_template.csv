@@ -1,0 +1,4 @@
+supplier_name,supplier_email,supplier_country,supplier_country_code,supplier_about,title,description,category,unit_cost_usd,shipping_per_unit_usd,moq,amazon_price_usd,amazon_monthly_sales,weight_kg,length_cm,width_cm,height_cm,asin
+Ningbo Example Homeware,demo1@example.com,China,CN,OEM homeware factory,Silicone Stretch Lids (6-pack),Reusable food-grade silicone lids,kitchen,1.40,0.80,500,14.99,4200,0.15,18,13,3,
+Ningbo Example Homeware,demo1@example.com,China,CN,OEM homeware factory,Bamboo Cutting Board,Large bamboo board with juice groove,kitchen,3.90,2.20,300,27.99,1900,1.10,38,28,2,
+Shenzhen Example Tech,demo2@example.com,China,CN,Small-electronics factory,USB-C 65W Charger,GaN fast charger,electronics,5.20,1.30,200,29.99,5200,0.12,7,7,3,
