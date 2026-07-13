@@ -37,6 +37,10 @@
         <div><label>Min. order qty</label><input name="minOrderQuantity" type="number" value="100"></div>
         <div><label>Lead time (days)</label><input name="leadTimeDays" type="number" value="30"></div>
       </div>
+      <div class="row">
+        <div><label>Years in business</label><input name="yearsActive" type="number" placeholder="e.g. 8"></div>
+        <div><label>Certifications</label><input name="certifications" placeholder="ISO 9001, CE, RoHS"></div>
+      </div>
       <label>About your company</label>
       <textarea name="about" placeholder="OEM/ODM capability, main product lines, certifications, export experience…"></textarea>
       <button type="submit">Create supplier account</button>
@@ -53,7 +57,8 @@
 document.getElementById("f").addEventListener("submit", async (e) => {
   e.preventDefault();
   const fd = Object.fromEntries(new FormData(e.target).entries());
-  ["minOrderQuantity","leadTimeDays"].forEach(k => fd[k] = parseInt(fd[k]||"0"));
+  ["minOrderQuantity","leadTimeDays","yearsActive"].forEach(k => fd[k] = parseInt(fd[k]||"0"));
+  if (fd.certifications) fd.certifications = fd.certifications.split(",").map(s=>s.trim()).filter(Boolean);
   try {
     const r = await api("/companies/register", { method:"POST", body: fd });
     setToken(r.token);
